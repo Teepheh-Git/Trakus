@@ -93,7 +93,7 @@ const Location = (props) => {
 
                 <CustomButton
                     btnText="Done"
-                    btnStyle={{ marginTop: 24 }}
+                    btnStyle={{ marginTop: 25 }}
                     onPress={onDone}
 
 
