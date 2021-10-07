@@ -1,10 +1,18 @@
 import { useNavigation } from '@react-navigation/core';
-import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, StyleSheet, Image, Text, TouchableOpacity, Dimensions } from 'react-native';
+import MapView, { Marker, AnimatedRegion, PROVIDER_GOOGLE } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { GOOGLE_MAP_KEY } from '../../src/constants/googleMapKey';
 import imagePath from '../constants/imagePath';
+
+import Loader from '../components/Loader';
+import { locationPermission, getCurrentLocation } from '../helper/helperFunction';
+
+const screen = Dimensions.get('window');
+const ASPECT_RATIO = screen.width / screen.height;
+const LATITUDE_DELTA = 0.04;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 
 
@@ -12,19 +20,61 @@ const Home = () => {
     const navigation = useNavigation();
 
     const [state, setState] = useState({
-        startingCords: {
+        curLoc: {
             latitude: 6.6640,
             longitude: 3.2821,
         },
-        destinationCords: {
-            // latitude: 6.6018,
-            // longitude: 3.3515,
-        },
+        destinationCords: {},
+        isLoading: false,
+        coordinate: new AnimatedRegion({
+            latitude: 6.6640,
+            longitude: 3.2821,
+            latitudeDelta: LATITUDE_DELTA,
+            longitudeDelta: LONGITUDE_DELTA
+        }),
+        time: 0,
+        distance: 0,
+
     });
 
     const mapReference = useRef();
+    const markerRef = useRef()
+    const { curLoc, time, distance, destinationCords, isLoading, coordinate } = state
 
-    const { startingCords, destinationCords } = state;
+    useEffect(() => {
+        getLiveLocation()
+
+    }, [])
+
+    const getLiveLocation = async () => {
+
+        const locPermissionDenied = await locationPermission()
+        if (locPermissionDenied) {
+            const { latitude, longitude } = await getCurrentLocation()
+            console.log("get live location after 6 second")
+            animate(latitude, longitude);
+            setState({
+                ...state,
+                curLoc: { latitude, longitude },
+                coordinate: new AnimatedRegion({
+                    latitude: latitude,
+                    longitude: longitude,
+                    latitudeDelta: LATITUDE_DELTA,
+                    longitudeDelta: LONGITUDE_DELTA
+                })
+
+            })
+        }
+
+    }
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            getLiveLocation()
+        }, 6000);
+        return () => clearInterval(interval)
+    })
+
 
     const onPressLocation = () => {
         navigation.navigate('Location', { getCoordinates: fetchValues })
@@ -33,22 +83,37 @@ const Home = () => {
     const fetchValues = (data) => {
 
         setState({
+            ...state,
 
-            startingCords: {
-                latitude: data.pickupCords.latitude,
-                longitude: data.pickupCords.longitude,
-            },
-
+            // curLoc: {
+            //     latitude: data.pickupCords.latitude,
+            //     longitude: data.pickupCords.longitude,
+            // },
             destinationCords: {
                 latitude: data.destinationCords.latitude,
                 longitude: data.destinationCords.longitude,
             }
-
         })
-
-
-
         // console.log('data====>', data)
+    }
+
+    const animate = (latitude, longitude) => {
+        const newCoordinate = { latitude, longitude };
+        if (Platform.OS == 'android') {
+            if (markerRef.current) {
+                markerRef.current.animateMarkerToCoordinate(newCoordinate, 7000);
+            }
+        } else {
+            coordinate.timing(newCoordinate).start();
+        }
+    }
+    const onCenter = () => {
+        mapReference.current.animateToRegion({
+            latitude: curLoc.latitude,
+            longitude: curLoc.longitude,
+            latitudeDelta: LATITUDE_DELTA,
+            longitudeDelta: LONGITUDE_DELTA
+        })
     }
 
 
@@ -61,21 +126,33 @@ const Home = () => {
                     ref={mapReference}
                     provider={PROVIDER_GOOGLE}
                     style={StyleSheet.absoluteFill}
-                    initialRegion={startingCords}>
+                    initialRegion={{
+                        ...curLoc,
+                        latitudeDelta: LATITUDE_DELTA,
+                        longitudeDelta: LONGITUDE_DELTA,
+                    }}>
 
-                    <Marker coordinate={startingCords}
+                    <Marker.Animated
+                        ref={markerRef}
+                        coordinate={coordinate}
                         image={imagePath.isCurrentLocation}
                     />
-                    <Marker coordinate={destinationCords}
-                        image={imagePath.isDestinationLocation} />
 
-                    <MapViewDirections
-                        origin={startingCords}
+                    {Object.keys(destinationCords).length > 0 && (<Marker
+                        coordinate={destinationCords}
+                        image={imagePath.isDestinationLocation}
+                    />)}
+
+                    {Object.keys(destinationCords).length > 0 && (<MapViewDirections
+                        origin={curLoc}
                         destination={destinationCords}
                         apikey={GOOGLE_MAP_KEY}
-                        strokeWidth={5}
+                        strokeWidth={6}
                         strokeColor={'hotpink'}
                         optimizeWaypoints={true}
+                        onStart={(params) => {
+                            console.log(`Started routing between "${params.origin}" and "${params.destination}"`);
+                        }}
                         onReady={result => {
                             mapReference.current.fitToCoordinates(
                                 result.coordinates, {
@@ -91,8 +168,18 @@ const Home = () => {
                         onError={e => {
                             console.log('An error occurred')
                         }}
-                    />
+                    />)}
                 </MapView>
+                <TouchableOpacity
+                    style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        right: 0
+                    }}
+                    onPress={onCenter}
+                >
+                    <Image source={imagePath.isDestinationLocation} />
+                </TouchableOpacity>
 
             </View>
 
@@ -105,6 +192,7 @@ const Home = () => {
                     <Text>Choose your location</Text>
                 </TouchableOpacity>
             </View>
+            <Loader isLoading={isLoading} />
 
         </View>
     );

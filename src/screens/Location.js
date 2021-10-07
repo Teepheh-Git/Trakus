@@ -11,7 +11,7 @@ const Location = (props) => {
 
     const navigation = useNavigation()
     const [state, setState] = useState({
-        pickupCords: {},
+        // pickupCords: {},
         destinationCords: {},
     });
 
@@ -20,10 +20,10 @@ const Location = (props) => {
 
     const checkValid = () => {
 
-        if (Object.keys(pickupCords).length === 0) {
-            showError('Please enter your starting location')
-            return false
-        }
+        // if (Object.keys(pickupCords).length === 0) {
+        //     showError('Please enter your starting location')
+        //     return false
+        // }
         if (Object.keys(destinationCords).length === 0) {
             showError('Please enter your destination location')
             return false
@@ -43,7 +43,7 @@ const Location = (props) => {
 
         if (isValid) {
             props.route.params.getCoordinates({
-                pickupCords,
+                // pickupCords,
                 destinationCords
             })
             showSuccess('Now showing direction')
@@ -52,14 +52,14 @@ const Location = (props) => {
 
     }
 
-    const fetchAddressCords = (lat, lng) => {
-        setState({
-            ...state, pickupCords: {
-                latitude: lat,
-                longitude: lng,
-            }
-        })
-    }
+    // const fetchAddressCords = (lat, lng) => {
+    //     setState({
+    //         ...state, pickupCords: {
+    //             latitude: lat,
+    //             longitude: lng,
+    //         }
+    //     })
+    // }
 
     const fetchDestinationCords = (lat, lng) => {
         setState({
@@ -80,13 +80,13 @@ const Location = (props) => {
     return (
         <View style={styles.container}>
 
-            <View
+            <ScrollView
                 keyboardShouldPersistTaps='handled'
                 style={{ backgroundColor: 'white', flex: 1, padding: 24 }}>
-                <AddressPickup
+                {/* <AddressPickup
                     fetchAddress={fetchAddressCords}
-                    placeholderText="Enter Pickup Location" />
-                <View style={{ marginBottom: 16 }}></View>
+                    placeholderText="Enter Pickup Location" /> */}
+                <View style={{ marginVertical: 16 }}></View>
                 <AddressPickup
                     fetchAddress={fetchDestinationCords}
                     placeholderText="Enter Destination Location" />
@@ -98,7 +98,7 @@ const Location = (props) => {
 
 
                 />
-            </View>
+            </ScrollView>
 
         </View>
     );
