@@ -80,25 +80,25 @@ const Location = (props) => {
     return (
         <View style={styles.container}>
 
-            <ScrollView
+            <View
                 keyboardShouldPersistTaps='handled'
-                style={{ backgroundColor: 'white', flex: 1, padding: 24 }}>
+                style={{ backgroundColor: 'white', flex: 1, padding: 24, }}>
                 {/* <AddressPickup
                     fetchAddress={fetchAddressCords}
                     placeholderText="Enter Pickup Location" /> */}
-                <View style={{ marginVertical: 16 }}></View>
+                <View style={{ marginVertical: 10 }}></View>
                 <AddressPickup
                     fetchAddress={fetchDestinationCords}
                     placeholderText="Enter Destination Location" />
 
                 <CustomButton
                     btnText="Done"
-                    btnStyle={{ marginTop: 25 }}
+                    btnStyle={{ marginBottom: 55 }}
                     onPress={onDone}
 
 
                 />
-            </ScrollView>
+            </View>
 
         </View>
     );

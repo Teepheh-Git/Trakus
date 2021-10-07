@@ -116,9 +116,18 @@ const Home = () => {
         })
     }
 
+    const fetchTime = (d, t) => {
+        setState(state => ({ ...state, distance: d, time: t }))
+    }
+
 
     return (
-        <View style={{ flex: 1, }}>
+        <View style={styles.container}>
+
+            {distance !== 0 && time !== 0 && (<View style={{ alignItems: 'center', marginVertical: 16 }}>
+                <Text>Time to destination: {time.toFixed(0)} min </Text>
+                <Text>Distance to destination: {distance.toFixed(0)} KM</Text>
+            </View>)}
 
             <View style={{ flex: 1, }}>
 
@@ -154,16 +163,20 @@ const Home = () => {
                             console.log(`Started routing between "${params.origin}" and "${params.destination}"`);
                         }}
                         onReady={result => {
-                            mapReference.current.fitToCoordinates(
-                                result.coordinates, {
-                                edgePadding: {
-                                    right: 30,
-                                    bottom: 300,
-                                    left: 30,
-                                    top: 100,
+                            console.log(`Distance: ${result.distance} km`)
+                            console.log(`Duration: ${result.duration} min.`)
+                            fetchTime(result.distance, result.duration),
+
+                                mapReference.current.fitToCoordinates(
+                                    result.coordinates, {
+                                    edgePadding: {
+                                        right: 30,
+                                        bottom: 300,
+                                        left: 30,
+                                        top: 100,
+                                    },
                                 },
-                            },
-                            );
+                                );
                         }}
                         onError={e => {
                             console.log('An error occurred')
@@ -202,19 +215,17 @@ const Home = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // justifyContent: 'center',
-        // alignItems: 'center',
     },
     bottomCard: {
-        backgroundColor: '#C2D0D3',
-        padding: 30,
+        backgroundColor: 'white',
         width: '100%',
+        padding: 30,
         borderTopEndRadius: 24,
         borderTopStartRadius: 24
     },
     inputStyle: {
         backgroundColor: 'white',
-        borderRadius: 5,
+        borderRadius: 4,
         borderWidth: 1,
         alignItems: 'center',
         height: 48,
